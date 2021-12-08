@@ -1,0 +1,51 @@
+Approach: Take union of 2 to yield 1 in order to produce a known mapping
+
+1) Start with unique counts, 1: 2, 4: 4, 7: 3, 8: 7
+
+
+
+0: a b c _ e f g : 6            8: a b c d e f g : 7
+1: _ _ c _ _ f _ : 2            0: a b c _ e f g : 6
+2: a _ c d e _ g : 5            6: a b _ d e f g : 6
+3: a _ c d _ f g : 5            9: a b c d _ f g : 6
+4: _ b c d _ f _ : 4            2: a _ c d e _ g : 5
+5: a b _ d _ f g : 5            3: a _ c d _ f g : 5
+6: a b _ d e f g : 6            5: a b _ d _ f g : 5
+7: a _ c _ _ f _ : 3            4: _ b c d _ f _ : 4
+8: a b c d e f g : 7            7: a _ c _ _ f _ : 3
+9: a b c d _ f g : 6            1: _ _ c _ _ f _ : 2
+
+
+
+-> Find a pair that satisifes: (one letter apart) or (apart_letters without known).len() = 1
+
+Given the pair, acquire the mapping for the one letter apart with an intersection
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+b
+a
+c
+dd
+
+
+
+
+
+

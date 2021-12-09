@@ -10,6 +10,7 @@ struct Point {
     is_lowpoint: bool,
     checked: bool,
     basin_member: bool,
+    coord: (usize, usize),
 }
 
 #[derive(Clone, Debug)]
@@ -17,6 +18,7 @@ struct Floor {
     points: Vec<Point>,
     risk_sum: u32,
     basin_sizes: Vec<u32>,
+    lowpoints_found: bool,
 }
 
 impl Floor {
@@ -81,7 +83,9 @@ impl Floor {
                 risk_level: 0,
                 is_lowpoint: false,
                 checked: false,
-                basin_member: false
+                basin_member: false,
+                coord: (0, 0),
+
             };
             (FLOOR_X + 2) * (FLOOR_Y + 2)
         ];
@@ -90,11 +94,13 @@ impl Floor {
             points,
             risk_sum: 0,
             basin_sizes: Vec::<u32>::new(),
+            lowpoints_found: false,
         };
 
         for y in 0..FLOOR_Y {
             for x in 0..FLOOR_X {
                 floor.set_height(x, y, heights[x + y * FLOOR_X]);
+                floor.get_mut(x, y).coord = (x, y);
             }
         }
 
@@ -105,6 +111,9 @@ impl Floor {
     fn set_height(&mut self, x: usize, y: usize, height: u32) {
         self.points[(x + 1) + (y + 1) * (FLOOR_X + 2)].height = height;
     }
+    fn get_mut(&mut self, x: usize, y: usize) -> &mut Point {
+        &mut self.points[(x + 1) + (y + 1) * (FLOOR_X + 2)]
+    }
 
     fn get(&self, x: usize, y: usize) -> Point {
         self.points[(x + 1) + (y + 1) * (FLOOR_X + 2)]
@@ -113,9 +122,7 @@ impl Floor {
         let idx = (x + 1) + (y + 1) * (FLOOR_X + 2);
         self.points[idx].checked = checked;
     }
-    fn set_basin_member(&mut self, x: usize, y: usize, checked: bool) {
-        let idx = (x + 1) + (y + 1) * (FLOOR_X + 2);
-        self.points[idx].basin_member = checked;
+    fn set_basin_member(&mut self, x: usize, y: usize, checked: bool) { let idx = (x + 1) + (y + 1) * (FLOOR_X + 2); self.points[idx].basin_member = checked;
     }
 
     fn set_lowpoint(&mut self, x: usize, y: usize) {
@@ -151,35 +158,34 @@ impl Floor {
             for x in 0..FLOOR_X {
                 self.set_checked(x, y, false);
             }
-        }
-    }
-
+        } }
     fn calc_risk_sum(&mut self) {
         self.risk_sum = self.points.iter().map(|p| p.risk_level).sum();
     }
 
     fn get_all_basin_sizes(&mut self) {
         // returns them in sorted order for convenience
+        
+        // all basins will be centered on a lowpoint
+        if !self.lowpoints_found {
+            self.set_lowpoints(); 
+        }
+        let lowpoints: Vec<(usize, usize)> = self.points.iter().filter(|p| p.is_lowpoint).map(|p| p.coord).collect();
+
         let mut basin_sizes: Vec<u32> = vec![];
-        for y in 0..FLOOR_Y {
-            for x in 0..FLOOR_X {
-                if !self.get(x, y).basin_member & (self.get(x, y).height != 9) {
-                    println!("finding basin size for ({}, {})", x, y);
-                    let size = self.find_basin_size(x as i32, y as i32);
-                    basin_sizes.push(size);
-                    self.display();
-                    self.clear_checked()
-                }
-            }
+
+        for pt in lowpoints {
+            let (x, y) = pt;
+            let size = self.find_basin_size(x as i32, y as i32);
+            basin_sizes.push(size);
+            self.display();
+            self.clear_checked()
+
         }
         basin_sizes.sort_unstable();
         basin_sizes.reverse();
         self.basin_sizes = basin_sizes.clone();
     }
-
-
-
-
 
 }
 
@@ -194,7 +200,8 @@ fn main() {
         .collect::<Vec<u32>>();
 
     let mut floor = Floor::from_heights(input);
-    // floor.set_lowpoints();
+
+    floor.set_lowpoints();
     floor.display();
     floor.calc_risk_sum();
     floor.get_all_basin_sizes();

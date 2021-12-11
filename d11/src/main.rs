@@ -105,10 +105,13 @@ fn main() {
         tot_flashes += flash_step(&mut input);
     }
 
+    input = contents.chars().filter(|x| *x != '\n').map(|x| x.to_digit(10).unwrap() as i32).collect::<Vec<i32>>();
     // part 2
     while cur_flashes != input.len() as i64 {
+        // println!("-------------------{}-------------------", i);
         i += 1;
         cur_flashes = flash_step(&mut input);
+        // pretty_print(&input);
     }
 
     println!("Part 1 Total flashes: {}", tot_flashes);
